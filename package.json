@@ -18,6 +18,7 @@
   "dependencies": {
     "@octokit/core": "^3.2.5",
     "discord.js": "^12.5.1",
-    "express": "^4.17.1"
+    "express": "^4.17.1",
+    "rss-parser": "^3.11.0"
   }
 }
