@@ -44,7 +44,7 @@ discordClient.on('message', msg => {
 			let eventDate = new Date(event.date);
 			eventsStringList.push(`**${dayOfTheWeek[eventDate.getDay()]}**, ${new Intl.DateTimeFormat('pl-PL', { dateStyle: 'short', timeStyle: 'short', timeZone: 'Europe/Warsaw'}).format(eventDate)}: **${event.title}** // <${event.link}>`);
 		})
-		let eventsText = `Następne ${eventsStringList.length} audycji (wg czasu polskiego):\n${eventsStringList.join('\n')}`;
+		let eventsText = `Kalendarz audycji: <${process.env.AIRTABLE_CALENDAR_VIEW}>\nNastępne ${eventsStringList.length} audycji (wg czasu polskiego):\n${eventsStringList.join('\n')}`;
 		msg.channel.send(`${eventsText}\n<@${msg.author.id}>, po więcej zajrzyj na: ${process.env.DEVRADIOPL_HOME_PAGE}`);
 	} else if (msg.content === commands.BOT) {
 		msg.channel.send('Wklej link do spotkania Clubhouse, żeby dodać spotkanie\nWpisz `!ramowka`, a powiem Ci co się kroi');
