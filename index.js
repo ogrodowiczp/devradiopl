@@ -11,6 +11,7 @@ const RssParser = require('rss-parser');
 const rssParserClient = new RssParser();
 
 const { commands } = require('./commands.js');
+const { dayOfTheWeek } = require('./const.js');
 
 let upcomingEvents = [];
 
@@ -40,7 +41,8 @@ discordClient.on('message', msg => {
 	} else if (msg.content === commands.RAMOWKA) {
 		let eventsStringList = [];
 		upcomingEvents.forEach(event => {
-			eventsStringList.push(`**${new Intl.DateTimeFormat('pl-PL', { dateStyle: 'short', timeStyle: 'short', timeZone: 'Europe/Warsaw'}).format(new Date(event.date))}**: *${event.title}* // <${event.link}>`);
+			let eventDate = new Date(event.date);
+			eventsStringList.push(`**${dayOfTheWeek[eventDate.getDay()]}**, ${new Intl.DateTimeFormat('pl-PL', { dateStyle: 'short', timeStyle: 'short', timeZone: 'Europe/Warsaw'}).format(eventDate)}: **${event.title}** // <${event.link}>`);
 		})
 		let eventsText = `Następne ${eventsStringList.length} audycji (wg czasu polskiego):\n${eventsStringList.join('\n')}`;
 		msg.channel.send(`${eventsText}\n<@${msg.author.id}>, po więcej zajrzyj na: ${process.env.DEVRADIOPL_HOME_PAGE}`);
