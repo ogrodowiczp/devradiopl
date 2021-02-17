@@ -18,10 +18,6 @@ discordClient.on('ready', () => {
 
 discordClient.on('message', msg => {
 	if (msg.author.bot) return;
-	if (msg.content.startsWith('!') && msg.channel.id != process.env.DISCORD_CHANNEL_ID_RAMOWKA) {
-		msg.channel.send(`<@${msg.author.id}> sorki, działam tylko na kanale <#${process.env.DISCORD_CHANNEL_ID_RAMOWKA}>.`);
-		return;
-	}
 	if (msg.content.startsWith(process.env.CLUBHOUSE_ROOM_URL_PREFIX)) {
 		loadPageContent(msg.content)
 			.then((event) => {
@@ -40,7 +36,23 @@ discordClient.on('message', msg => {
 	} else if (msg.content === commands.BOT) {
 		msg.channel.send('Wklej link do spotkania Clubhouse, żeby dodać spotkanie\n'+
 						'Wpisz `!ramowka`, a powiem Ci co się kroi\n'+
+						'Dodaj pomysł pisząc `!idea Moj pomysl`, a zapiszemy Twój pomysł na rozwój\n'+
 						'Chcesz pomóc mnie rozwijać? Daj znać!');
+	} else if (msg.content.startsWith(commands.IDEA)) {
+		let idea = msg.content.split(commands.IDEA)[1].trim();
+		if (idea.length === 0) {
+			msg.channel.send(`<@${msg.author.id}> że co, mam się domyślić co Ci chodzi po głowie?`);
+		} else {
+			airtableClient.saveIdea(idea, msg.author.username)
+			.then((result) => {
+				if (result.error) {
+					msg.channel.send(`<@${msg.author.id}> sorki, ale się nie udało. Spróbuj dodać ręcznie: <${process.env.AIRTABLE_NEW_IDEA_FORM}>`);
+					console.error(error);
+				} else {
+					msg.channel.send(`<@${msg.author.id}> wezmę sobie Twój pomysł głęboko do serduszka.`);
+				}
+			})
+		}
 	}
 });
 

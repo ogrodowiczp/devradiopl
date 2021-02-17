@@ -56,6 +56,23 @@ class AirtableWrapper {
             })
         });
     }
+
+    saveIdea(idea, author) {
+        return new Promise(resolve => {
+            this.airtableClient(process.env.AIRTABLE_IDEAS_TABLE_NAME).create([{
+                "fields": {
+                    "Name": idea,
+                    "Author": author
+                }
+            }], (err, records) => {
+                if (err) {
+                    console.error(err);
+                    resolve(err);
+                }
+                resolve(records[0]);
+            })
+        })
+    }
 };
 
 module.exports = { AirtableWrapper };

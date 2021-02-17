@@ -1,5 +1,6 @@
 const commands = {
     RAMOWKA: "!ramowka",
-    BOT: "!bot"
+    BOT: "!bot",
+    IDEA: "!idea"
 };
 module.exports = { commands };
