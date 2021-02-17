@@ -7,11 +7,13 @@ const discordClient = new Discord.Client();
 const { Octokit } = require("@octokit/core");
 const octokitClient = new Octokit({ auth: process.env.GITHUB_PERSONAL_TOKEN });
 
-const RssParser = require('rss-parser');
-const rssParserClient = new RssParser();
-
 const { commands } = require('./commands.js');
 const { dayOfTheWeek } = require('./const.js');
+
+const { AirtableWrapper } = require('./airtable.js');
+let airtableClient = new AirtableWrapper();
+
+const { Event } = require('./model.js');
 
 let upcomingEvents = [];
 
@@ -39,17 +41,22 @@ discordClient.on('message', msg => {
 		});
 		
 	} else if (msg.content === commands.RAMOWKA) {
-		let eventsStringList = [];
-		upcomingEvents.forEach(event => {
-			let eventDate = new Date(event.date);
-			eventsStringList.push(`**${dayOfTheWeek[eventDate.getDay()]}**, ${new Intl.DateTimeFormat('pl-PL', { dateStyle: 'short', timeStyle: 'short', timeZone: 'Europe/Warsaw'}).format(eventDate)}: **${event.title}** // <${event.link}>`);
-		})
-		let eventsText = `Kalendarz audycji: <${process.env.AIRTABLE_CALENDAR_VIEW}>\nNastępne ${eventsStringList.length} audycji (wg czasu polskiego):\n${eventsStringList.join('\n')}`;
-		msg.channel.send(`${eventsText}\n<@${msg.author.id}>, po więcej zajrzyj na: ${process.env.DEVRADIOPL_HOME_PAGE}`);
+		sendUpcomingEvents(msg);
 	} else if (msg.content === commands.BOT) {
 		msg.channel.send('Wklej link do spotkania Clubhouse, żeby dodać spotkanie\nWpisz `!ramowka`, a powiem Ci co się kroi');
 	}
 });
+
+async function sendUpcomingEvents(msg) {
+	let auditions = await airtableClient.getAuditions();
+	let eventsStringList = [];
+	auditions.forEach(event => {
+		let eventDate = new Date(event.date);
+		eventsStringList.push(`**${dayOfTheWeek[eventDate.getDay()]}**, ${new Intl.DateTimeFormat('pl-PL', { dateStyle: 'short', timeStyle: 'short', timeZone: 'Europe/Warsaw'}).format(eventDate)}: **${event.title}** // <${event.link}>`);
+	})
+	let eventsText = `Kalendarz audycji: <${process.env.AIRTABLE_CALENDAR_VIEW}>\nNastępne ${eventsStringList.length} audycji (wg czasu polskiego):\n${eventsStringList.join('\n')}`;
+	msg.channel.send(`${eventsText}\n<@${msg.author.id}>, po więcej zajrzyj na: ${process.env.DEVRADIOPL_HOME_PAGE}`);
+}
 
 discordClient.login(process.env.DISCORD_AUTH_KEY);
 
@@ -58,39 +65,10 @@ expressApp.get('/', (req, res) => {
 });
 
 expressApp.listen(process.env.PORT || 8080, () => {
-	reloadItems();
 	console.log('Web server has started');
 })
 
 const http = require("http");
 setInterval(function() {
-	reloadItems();
     http.get(process.env.SELF_APP_URL);
 }, 300000);
-
-class Event {
-
-	constructor(title, link, date) {
-		this.title = title;
-		this.link = link;
-		this.date = date;
-	}
-
-	title;
-	link;
-	date;
-}
-
-let reloadItems = (() => {
-	(async () => {
-		let feed = await rssParserClient.parseURL(`${process.env.DEVRADIOPL_HOME_PAGE}/feed.xml`);
-		let present = Date.now();
-		upcomingEvents = [];
-		feed.items.filter(item => new Date(item.pubDate) > present)
-				.sort((a, b) => new Date(a.pubDate) - new Date(b.pubDate))
-				.slice(0, 10)
-				.forEach(item => {
-					upcomingEvents.push(new Event(item.title, item.link, new Date(item.pubDate)));
-				});
-	})();
-});
