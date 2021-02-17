@@ -16,7 +16,7 @@ class AirtableWrapper {
     getAuditions() {
         return new Promise(resolve => {
             let upcomingEvents = [];
-            this.airtableClient('Auditions').select({
+            this.airtableClient(process.env.AIRTABLE_AUDITIONS_TABLE_NAME).select({
                 fields: ['Audition Name', 'Time', 'Hosts', 'Description', 'URL'],
                 filterByFormula: `IS_AFTER({Time},TODAY())`,
                 maxRecords: 10,
@@ -26,7 +26,7 @@ class AirtableWrapper {
                 }]
             }).eachPage((records, fetchNextPage) => {
                 records.forEach((record) => {
-                    upcomingEvents.push(new Event(record.get('Audition Name'), record.get('URL'), record.get('Time')));
+                    upcomingEvents.push(new Event(record.get('Audition Name'), record.get('Hosts'), record.get('Time'), record.get('Description'), record.get('URL')));
                 });
 
                 fetchNextPage();
@@ -34,6 +34,26 @@ class AirtableWrapper {
             }, (err) => {
                 resolve(upcomingEvents);
             });   
+        });
+    }
+
+    createAudition(event) {
+        return new Promise(resolve => {
+            this.airtableClient(process.env.AIRTABLE_AUDITIONS_TABLE_NAME).create([{
+                "fields": {
+                    "Audition Name": event.title,
+                    "Description": event.description,
+                    "Time": event.date,
+                    "URL": event.link,
+                    "Hosts": event.hosts
+                }
+            }], (err, records) => {
+                if (err) {
+                    console.error(err);
+                    resolve(err);
+                }
+                resolve(records[0]);
+            })
         });
     }
 };
