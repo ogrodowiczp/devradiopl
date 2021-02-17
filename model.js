@@ -1,14 +1,19 @@
+
 class Event {
 
-	constructor(title, link, date) {
+	constructor(title, hosts, date, description, url) {
 		this.title = title;
-		this.link = link;
-		this.date = date;
+		this.link = url;
+        this.date = date;
+        this.description = description;
+        this.hosts = hosts;
 	}
 
-	title;
+    title;
+    hosts;
 	link;
-	date;
+    date;
+    description;
 }
 
 module.exports = { Event };
