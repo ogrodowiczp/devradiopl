@@ -40,6 +40,7 @@ discordClient.on('message', msg => {
 	} else if (msg.content === commands.BOT) {
 		msg.channel.send('Wklej link do spotkania Clubhouse, żeby dodać spotkanie\n'+
 						'Wpisz `!ramowka`, a powiem Ci co się kroi\n'+
+						'Chcesz usunąć audycję z ramówki? Wpisz: `!delete URL`, a usunę audycję z podanym adresem\n'+
 						'Dodaj pomysł pisząc `!idea Moj pomysl`, a zapiszemy Twój pomysł na rozwój\n'+
 						'Chcesz pomóc mnie rozwijać? Daj znać!');
 	} else if (msg.content.startsWith(commands.IDEA)) {
@@ -56,6 +57,21 @@ discordClient.on('message', msg => {
 					msg.channel.send(`<@${msg.author.id}> wezmę sobie Twój pomysł głęboko do serduszka.`);
 				}
 			})
+		}
+	} else if (msg.content.startsWith(commands.DELETE)) {
+		let removeUrl = msg.content.split(commands.DELETE)[1].trim();
+		if (removeUrl.length === 0) {
+			msg.channel.send(`<@${msg.author.id}> wklej URL audycji, której chcesz się pozbyć`);
+		} else {
+			airtableClient.removeAudition(removeUrl)
+			.then(result => {
+				if (result.error) {
+					msg.channel.send(`<@${msg.author.id}> nie udało mi się usunąć audycji :(`);
+				} else {
+					msg.channel.send(`<@${msg.author.id}> audycja usunięta z ramówki!`);
+					refreshAuditionsPage(msg);
+				}
+			});
 		}
 	}
 });
@@ -79,7 +95,7 @@ async function refreshAuditionsPage(msg) {
 		console.err(err);
 		msg.channel.send('Nie dałem rady odświeżyć strony... :(\nTwoja audycja pojawi się w przeciągu godziny.');
 	}).finally(() => {
-		msg.channel.send('Stronka odświeży się w przeciągu kilku minut :)');
+		msg.channel.send('Stronka odświeży się w przeciągu kilku minut...');
 	});	
 }
 

@@ -37,6 +37,23 @@ class AirtableWrapper {
         });
     }
 
+    findAuditionByUrl(url) {
+        return new Promise(resolve => {
+            this.airtableClient(process.env.AIRTABLE_AUDITIONS_TABLE_NAME).select({
+                fields: ['URL'],
+                filterByFormula: `{URL} = '${url}'`,
+                maxRecords: 1
+            }).eachPage((records, fetchNextPage) => {
+                resolve(records.length > 0 ? records[0].id : null);
+            }, (err) => {
+                if (err) {
+                    console.error(err);
+                    resolve(err);
+                }
+            });
+        });
+    } 
+
     createAudition(event) {
         return new Promise(resolve => {
             this.airtableClient(process.env.AIRTABLE_AUDITIONS_TABLE_NAME).create([{
@@ -72,6 +89,27 @@ class AirtableWrapper {
                 resolve(records[0]);
             })
         })
+    }
+
+    removeAudition(url) {
+        return new Promise(resolve => {
+            this.findAuditionByUrl(url)
+                .then(recordId => {
+                    if (!recordId) {
+                        console.error(`Audition with url <<${url}>> not found!`);
+                        resolve({success: false, error: 'Nie znalazłem takiej audycji'});
+                        return;
+                    }
+                    this.airtableClient(process.env.AIRTABLE_AUDITIONS_TABLE_NAME).destroy(recordId, (err, deletedRecord) => {
+                        if (err) {
+                            console.error(err);
+                            resolve(err);
+                        } else {
+                            resolve({success: true});
+                        }
+                    });
+                });
+        });
     }
 };
 
