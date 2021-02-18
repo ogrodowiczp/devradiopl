@@ -10,6 +10,9 @@ const { dayOfTheWeek } = require('./const.js');
 const { AirtableWrapper } = require('./airtable.js');
 let airtableClient = new AirtableWrapper();
 
+const { Octokit } = require("@octokit/rest");
+const octokitClient = new Octokit({ auth: process.env.GITHUB_PERSONAL_TOKEN });
+
 const { loadPageContent } = require('./parser');
 
 discordClient.on('ready', () => {
@@ -28,6 +31,7 @@ discordClient.on('message', msg => {
 						console.log(error);
 					} else {
 						msg.channel.send(`<@${msg.author.id}> melduję utworzenie audycji!`);
+						refreshAuditionsPage(msg);
 					}
 				});
 			});
@@ -65,6 +69,18 @@ async function sendUpcomingEvents(msg) {
 	})
 	let eventsText = `Kalendarz audycji: <${process.env.AIRTABLE_CALENDAR_VIEW}>\nNastępne ${eventsStringList.length} audycji (wg czasu polskiego):\n${eventsStringList.join('\n')}`;
 	msg.channel.send(`${eventsText}\n<@${msg.author.id}>, po więcej zajrzyj na: ${process.env.DEVRADIOPL_HOME_PAGE}`);
+}
+
+async function refreshAuditionsPage(msg) {
+	octokitClient.request(`POST /repos/${process.env.GITHUB_ISSUE_REPO_NAME}/actions/workflows/${process.env.GITHUB_WORKFLOW_ID}/dispatches`, {
+		ref: 'master'
+	})
+	.catch((err) => {
+		console.err(err);
+		msg.channel.send('Nie dałem rady odświeżyć strony... :(\nTwoja audycja pojawi się w przeciągu godziny.');
+	}).finally(() => {
+		msg.channel.send('Stronka odświeży się w przeciągu kilku minut :)');
+	});	
 }
 
 discordClient.login(process.env.DISCORD_AUTH_KEY);

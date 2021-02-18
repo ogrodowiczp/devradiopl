@@ -16,6 +16,7 @@
   "author": "Piotr Ogrodowicz",
   "license": "ISC",
   "dependencies": {
+    "@octokit/rest": "^18.1.1",
     "airtable": "^0.10.1",
     "discord.js": "^12.5.1",
     "express": "^4.17.1",
